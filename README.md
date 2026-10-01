@@ -1,592 +1,672 @@
-# 🤖 Agentic AI - Data Agent
+# 🤖 AI SQL Data Agent
 
-A sophisticated multi-agent system for intelligent data processing and analysis using LangGraph. This project demonstrates a complete implementation of an agentic architecture with specialized sub-agents for SQL operations and ETL workflows.
+An intelligent **AI-powered SQL and ETL data agent** built with **LangGraph, Groq, PostgreSQL, LangChain, and Pandas**.
 
-## YouTube Tutorial
-https://youtu.be/7yOmi4IX-Rs?si=_NGAHOomEPocRoqt
-
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Project Structure](#project-structure)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Agent Descriptions](#agent-descriptions)
-- [Data Models](#data-models)
-- [Examples](#examples)
-- [Contributing](#contributing)
+The system accepts natural-language instructions and intelligently routes them to specialized agents. It can generate and execute safe SQL queries against PostgreSQL databases or perform ETL operations such as extracting data from APIs, transforming datasets, and saving results in multiple formats.
 
 ---
 
-## 🎯 Overview
+## 🚀 Features
 
-**Agentic AI Data Agent** is an intelligent system that processes natural language queries and routes them to specialized agents for execution. The main agent acts as an intelligent router that understands user intent and delegates tasks to either the **SQL Analyst Agent** (for database queries) or the **ETL Analyst Agent** (for data extraction and transformation operations).
+### 🧠 Intelligent Query Routing
 
-This project showcases modern AI engineering practices including:
-- Multi-agent orchestration with LangGraph
-- Intelligent routing based on natural language understanding
-- Safety validation for SQL queries
-- Tool-based agent architecture
-- Dynamic LLM selection based on task complexity
+The main Data Agent analyzes the user's natural-language request and automatically routes it to the appropriate specialized agent:
 
----
+* **SQL Analyst Agent** → Database queries and analysis
+* **ETL Analyst Agent** → API extraction and data transformation
 
-## 🏗️ Architecture
+### 🗄️ SQL Agent
 
-The system follows a hierarchical agent architecture:
+The SQL Analyst Agent can:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Data Agent (Router)                      │
-│         Routes user queries to appropriate sub-agents       │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-         ┌───────────┴───────────┐
-         │                       │
-         ▼                       ▼
-    ┌──────────────┐        ┌──────────────┐
-    │ SQL Analyst  │        │ ETL Analyst  │
-    │   Agent      │        │   Agent      │
-    └──────────────┘        └──────────────┘
-         │                       │
-         ├─► Query Curation      ├─► Extract Load
-         ├─► Schema Context      ├─► Transform Load
-         ├─► SQL Generation      └─► Code Execution
-         ├─► Safety Validation   
-         ├─► Query Execution     
-         └─► Answer Generation   
+* Convert natural-language questions into SQL
+* Understand PostgreSQL database schemas
+* Generate SQL queries using an LLM
+* Validate SQL queries before execution
+* Prevent destructive SQL operations
+* Execute safe queries
+* Generate human-readable answers from query results
+
+### 🔄 ETL Agent
+
+The ETL Analyst Agent can:
+
+* Extract data from REST APIs
+* Convert JSON/API responses into structured data
+* Transform datasets using Pandas
+* Generate Pandas code dynamically
+* Save processed data as:
+
+  * CSV
+  * JSON
+  * Parquet
+* Execute ETL tools through LangChain tool calling
+
+### 🔐 SQL Safety
+
+The SQL workflow includes validation to prevent potentially destructive database operations such as:
+
+```text
+INSERT
+UPDATE
+DELETE
+DROP
+ALTER
+TRUNCATE
 ```
 
-### State Flow
+The system is designed primarily for safe data analysis and read operations.
 
-1. **User Input** → Natural language query
-2. **Router Node** → Classifies query as SQL or ETL
-3. **Agent Dispatch** → Routes to appropriate sub-agent
-4. **Processing** → Each agent processes the task
-5. **Output** → Returns structured result to user
+### ⚡ AI Model
 
----
+The project uses **Groq** through its OpenAI-compatible API endpoint.
 
-## ✨ Features
+Current model configuration:
 
-### Core Capabilities
+```text
+openai/gpt-oss-20b
+```
 
-- **Intelligent Query Routing**: Automatically classifies user queries as SQL or ETL operations
-- **SQL Analysis Agent**:
-  - Natural language to SQL query conversion
-  - Automatic schema context gathering
-  - SQL safety validation (prevents harmful operations)
-  - Query execution on PostgreSQL database
-  - Intelligent query refinement
-
-- **ETL Agent**:
-  - API data extraction (JSON to structured formats)
-  - Data transformation using Pandas
-  - Multi-format support (CSV, JSON, Parquet)
-  - Dynamic code generation based on user requirements
-  - Safe code execution
-
-- **Multi-LLM Support**:
-  - Low-complexity queries: Faster, cost-effective LLM
-  - Medium-complexity queries: Balanced LLM
-  - High-complexity queries: Premium LLM (Claude)
-
-- **Safety & Validation**:
-  - SQL query safety checking
-  - Protection against database modifications (INSERT, UPDATE, DELETE, DROP, etc.)
-  - Input validation and sanitization
-  - Structured output validation using Pydantic
+Groq provides the LLM inference layer while LangChain provides the interface used by the agents.
 
 ---
 
-## 📦 Prerequisites
+# 🏗️ Architecture
 
-- Python 3.12+
-- PostgreSQL database (for SQL operations)
-- API keys for LLM providers (Claude and/or OpenAI)
-- Virtual environment (recommended)
+```text
+                         ┌──────────────────────────┐
+                         │        User Query        │
+                         │   Natural Language Input │
+                         └────────────┬─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │       Data Agent         │
+                         │      Router Node         │
+                         └────────────┬─────────────┘
+                                      │
+                         ┌────────────┴────────────┐
+                         │                         │
+                         ▼                         ▼
+              ┌───────────────────┐     ┌───────────────────┐
+              │   SQL Analyst     │     │    ETL Analyst    │
+              │      Agent        │     │       Agent       │
+              └─────────┬─────────┘     └─────────┬─────────┘
+                        │                         │
+                        ▼                         ▼
+              ┌───────────────────┐     ┌───────────────────┐
+              │   PostgreSQL      │     │  REST APIs / CSV  │
+              │     Database      │     │   Pandas / Files  │
+              └───────────────────┘     └───────────────────┘
+```
+
+## 🔄 Agent Workflow
+
+```text
+User Input
+    ↓
+Data Agent
+    ↓
+Query Classification
+    ↓
+ ┌───────────────┐
+ │               │
+SQL             ETL
+ │               │
+ ▼               ▼
+SQL Agent      ETL Agent
+ │               │
+ ▼               ▼
+PostgreSQL     API / Files
+ │               │
+ └───────┬───────┘
+         ▼
+    Final Response
+```
 
 ---
 
-## 🚀 Installation
+# 🛠️ Technology Stack
 
-### 1. Clone and Setup Project
+| Technology    | Purpose                      |
+| ------------- | ---------------------------- |
+| Python        | Core programming language    |
+| LangGraph     | Agent orchestration          |
+| LangChain     | LLM and tool integration     |
+| Groq          | LLM inference                |
+| PostgreSQL    | Relational database          |
+| Pandas        | Data transformation          |
+| Pydantic      | Structured data validation   |
+| psycopg2      | PostgreSQL connection        |
+| python-dotenv | Environment configuration    |
+| uv            | Python dependency management |
+
+---
+
+# 📁 Project Structure
+
+```text
+AI-SQL-Data-Agent/
+│
+├── agents/
+│   ├── __init__.py
+│   ├── data_agent.py
+│   ├── sql_analyst.py
+│   └── etl_analyst.py
+│
+├── Models/
+│   ├── __init__.py
+│   └── schema.py
+│
+├── utils/
+│   ├── __init__.py
+│   ├── database.py
+│   ├── etl_tools.py
+│   └── llm_pick.py
+│
+├── data/
+│   ├── extract/
+│   ├── transform/
+│   ├── users.csv
+│   ├── vehicles.csv
+│   ├── rides.csv
+│   ├── payments.csv
+│   └── ratings.csv
+│
+├── feed_db.py
+├── main.py
+├── pyproject.toml
+├── uv.lock
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+---
+
+# 📊 Sample Dataset
+
+The project includes sample datasets for database analysis:
+
+| Dataset  | Records |
+| -------- | ------: |
+| Users    |  10,000 |
+| Vehicles |   3,000 |
+| Rides    |  20,000 |
+| Payments |  16,073 |
+| Ratings  |  12,000 |
+
+These datasets are loaded into PostgreSQL using `feed_db.py`.
+
+---
+
+# ⚙️ Requirements
+
+Before running the project, install:
+
+* Python 3.12+
+* PostgreSQL
+* Git
+* uv
+* Groq API key
+
+---
+
+# 🚀 Installation
+
+## 1. Clone the repository
 
 ```bash
-cd Data_Agent
-python -m venv .venv
-
-# Activate virtual environment
-# On Windows:
-.\.venv\Scripts\Activate.ps1
-# On macOS/Linux:
-source .venv/bin/activate
+git clone https://github.com/DattaramMuknak/AI-SQL-Data-Agent.git
+cd AI-SQL-Data-Agent
 ```
 
-### 2. Install Dependencies
+## 2. Create the virtual environment
+
+Using `uv`:
 
 ```bash
-uv pip install -r requirements.txt
-# or
-pip install -e .
+uv sync
 ```
 
-This installs:
-- **langchain**: Core LLM framework
-- **langgraph**: Multi-agent orchestration
-- **langchain-anthropic**: Claude AI integration
-- **langchain-openai**: OpenAI integration
-- **pandas**: Data processing
-- **psycopg2**: PostgreSQL driver
-- **pydantic**: Data validation
-- **python-dotenv**: Environment configuration
+This installs the dependencies defined by the project.
 
-### 3. Environment Configuration
+---
 
-Create a `.env` file in the root directory:
+# 🔑 Environment Configuration
+
+Create a `.env` file in the project root.
+
+You can use `.env.example` as a template:
 
 ```env
-# LLM Configuration
-ANTHROPIC_API_KEY=your_claude_api_key
-OPENAI_API_KEY=your_openai_api_key
+GROQ_API_KEY=your_groq_api_key_here
 
-# Database Configuration
-host=localhost
 port=5432
+database=DataAgent
+host=localhost
 user=postgres
-password=your_password
-database=data_agent_db
+password=your_postgres_password
+```
 
-# Optional: LLM Model Selection
-LLM_MODEL_LOW=gpt-3.5-turbo
-LLM_MODEL_MEDIUM=gpt-4-turbo
-LLM_MODEL_HIGH=claude-3-opus
+### ⚠️ Security
+
+Never commit your real `.env` file.
+
+The repository uses `.gitignore` to exclude:
+
+```text
+.env
+.venv
+__pycache__
 ```
 
 ---
 
-## 📁 Project Structure
+# 🗄️ PostgreSQL Setup
 
-```
-Data_Agent/
-├── agents/                          # Agent implementations
-│   ├── __init__.py
-│   ├── data_agent.py               # Main router agent
-│   ├── sql_analyst.py              # SQL query agent
-│   └── etl_analyst.py              # ETL operations agent
-│
-├── Models/                          # Data models
-│   ├── __init__.py
-│   └── schema.py                   # Pydantic schemas for state management
-│
-├── utils/                           # Utility modules
-│   ├── __init__.py
-│   ├── database.py                 # PostgreSQL utilities
-│   ├── etl_tools.py                # ETL operations toolkit
-│   ├── llm_pick.py                 # LLM selection logic
-│
-├── data/                            # Data directory
-│   ├── extract/                     # Extracted data storage
-│   ├── transform/                   # Transformed data storage
-│   ├── payments.csv                 # Sample dataset
-│   ├── ratings.csv                  # Sample dataset
-│   ├── rides.csv                    # Sample dataset
-│   ├── users.csv                    # Sample dataset
-│   └── vehicles.csv                 # Sample dataset
-│
-├── main.py                          # Entry point
-├── feed_db.py                       # Database initialization script
-├── pyproject.toml                   # Project metadata and dependencies
-└── README.md                         # This file
+Make sure PostgreSQL is running.
+
+Create a database named:
+
+```text
+DataAgent
 ```
 
----
-
-## ⚙️ Configuration
-
-### LLM Selection (`utils/llm_pick.py`)
-
-The `pick_llm()` function intelligently selects the appropriate LLM based on complexity:
-
-```python
-from utils.llm_pick import pick_llm
-
-# Select based on complexity
-llm_fast = pick_llm("low")        # Cost-effective for simple queries
-llm_balanced = pick_llm("medium") # Balanced performance and cost
-llm_powerful = pick_llm("claude") # Premium model for complex tasks
-```
-
-### Database Configuration (`utils/database.py`)
-
-```python
-from utils.database import DatabaseUtil
-
-conn_details = {
-    "host": "localhost",
-    "port": 5432,
-    "user": "postgres",
-    "password": "password",
-    "dbname": "data_agent_db"
-}
-
-db = DatabaseUtil(conn_details)
-schema_info = db.schema_details("public")
-```
-
----
-
-## 💻 Usage
-
-### Running the Data Agent
-
-**Basic Usage:**
-
-```python
-from agents.data_agent import data_agent
-from langchain_core.messages import HumanMessage
-
-# Example: Extract data from API
-response = data_agent.invoke({
-    "messages": [
-        HumanMessage(content="""
-            I want to extract the data from the API endpoint 
-            'https://pokeapi.co/api/v2/pokemon' and save it to 
-            data/extract folder in CSV format
-        """)
-    ],
-    "route_response": ""
-})
-
-print(response)
-```
-
-**SQL Query Example:**
-
-```python
-response = data_agent.invoke({
-    "messages": [
-        HumanMessage(content="""
-            Show me the top 5 users with the highest ratings
-        """)
-    ],
-    "route_response": ""
-})
-```
-
-**ETL Example:**
-
-```python
-response = data_agent.invoke({
-    "messages": [
-        HumanMessage(content="""
-            Transform the rides.csv data by filtering only rides 
-            with rating > 4.5 and save to data/transform
-        """)
-    ],
-    "route_response": ""
-})
-```
-
-### Running from Command Line
+Then load the provided datasets:
 
 ```bash
-# Run the main data agent
+python feed_db.py
+```
+
+The script creates the required tables and loads the CSV datasets into PostgreSQL.
+
+---
+
+# ▶️ Running the Project
+
+Run the main Data Agent:
+
+```bash
 python main.py
+```
 
-# Run individual agents
-python agents/sql_analyst.py
-python agents/etl_analyst.py
+The agent will process the natural-language request and route it to the appropriate specialized agent.
+
+---
+
+# 💬 Example SQL Queries
+
+You can ask questions such as:
+
+```text
+Show me the top 5 users with the highest ratings.
+```
+
+```text
+What is the average rating for each vehicle type?
+```
+
+```text
+Show me the number of rides for each vehicle type.
+```
+
+```text
+What is the total payment amount collected?
+```
+
+The Data Agent determines that these are SQL-related requests and routes them to the SQL Analyst Agent.
+
+---
+
+# 🔄 Example ETL Request
+
+You can also provide an API extraction request:
+
+```text
+Extract the data from the API endpoint
+https://pokeapi.co/api/v2/pokemon
+and save it as CSV.
+```
+
+The system:
+
+```text
+User Request
+     ↓
+Data Agent
+     ↓
+ETL Agent
+     ↓
+extract_load_tool
+     ↓
+PokeAPI
+     ↓
+CSV
+```
+
+Example output:
+
+```text
+data/extract/csv/extracted_data.csv
 ```
 
 ---
 
-## 🤖 Agent Descriptions
+# 🔧 ETL Operations
 
-### 1. **Data Agent (Main Router)**
-**File:** `agents/data_agent.py`
+The ETL Agent supports two primary tools.
 
-**Responsibility:** 
-- Receives natural language user queries
-- Classifies queries as either SQL or ETL operations
-- Routes queries to appropriate sub-agents
-- Aggregates results and returns to user
+### 1. Extract & Load
 
-**Components:**
-- **Router Node**: Uses structured output to classify query intent
-- **Conditional Routing**: Routes to SQL or ETL based on classification
-- **Graph Orchestration**: Manages workflow using LangGraph
-
----
-
-### 2. **SQL Analyst Agent**
-**File:** `agents/sql_analyst.py`
-
-**Responsibility:**
-- Converts natural language queries to SQL
-- Handles all database query operations
-- Validates query safety
-- Executes queries and returns results
-
-**Workflow:**
-1. **Query Curation** - Refines user question for clarity
-2. **Context Gathering** - Fetches database schema details
-3. **Prompt Construction** - Creates detailed context for LLM
-4. **SQL Generation** - Generates SQL query using LLM
-5. **Safety Check** - Validates query safety
-6. **Query Execution** - Executes validated query on database
-7. **Answer Generation** - Formats and returns results
-
-**Safety Features:**
-- Prevents execution of dangerous commands (INSERT, UPDATE, DELETE, DROP, ALTER)
-- Validates query before execution
-- Automatic result limiting to 10 rows (unless specified)
-- Schema validation against database
-
----
-
-### 3. **ETL Analyst Agent**
-**File:** `agents/etl_analyst.py`
-
-**Responsibility:**
-- Handles data extraction from APIs
-- Performs data transformation using Pandas
-- Manages data loading to various formats
-- Executes code safely in controlled environment
-
-**Workflow:**
-1. **Tool Binding** - Attaches ETL tools to LLM
-2. **User Intent Understanding** - Analyzes transformation requirements
-3. **Tool Selection** - Chooses appropriate ETL operation
-4. **Code Generation** - Generates Pandas code for transformation
-5. **Safe Execution** - Executes generated code in sandboxed environment
-6. **Result Reporting** - Returns execution status and generated code
-
-**Supported Tools:**
-- **extract_load_tool**: Extract from API → Load to storage
-- **transform_load_tool**: Transform data using Pandas → Load result
-
-**Supported Formats:**
-- CSV (default)
-- JSON (Lines or Records)
-- Parquet
-
----
-
-## 📊 Data Models
-
-### AgentSchema (SQL Agent State)
-```python
-class AgentSchema(BaseModel):
-    messages: List                    # Conversation messages
-    user_question: str                # Original user query
-    curated_ques: str                 # Refined question
-    prompt_query_context: str         # Database context + prompt
-    generated_sql_query: str          # Generated SQL
-    is_safe: Literal["Yes", "No"]     # Safety validation result
-    comments: str                     # Safety check comments
-    sql_query_execution_result: str   # Query result
-    final_answer: str                 # Final formatted answer
+```text
+extract_load_tool
 ```
 
-### ETLAgentSchema (ETL Agent State)
-```python
-class ETLAgentSchema(BaseModel):
-    messages: List                    # Conversation messages
+Used to:
+
+```text
+API → JSON → Structured Data → CSV/JSON/Parquet
 ```
 
-### RouterSchema (Query Classification)
+### 2. Transform & Load
+
+```text
+transform_load_tool
+```
+
+Used to:
+
+```text
+Existing Dataset
+       ↓
+     Pandas
+       ↓
+Transformation
+       ↓
+CSV / JSON / Parquet
+```
+
+For example:
+
+```text
+Transform rides.csv by filtering
+rides with rating greater than 4.0
+and save the result as JSON.
+```
+
+---
+
+# 🧠 LangGraph Agent Design
+
+The project uses LangGraph to orchestrate the agents.
+
+### Main Data Agent
+
+Responsible for:
+
+1. Receiving the user request
+2. Understanding the intent
+3. Classifying the request
+4. Routing it to SQL or ETL
+5. Returning the final response
+
+### SQL Analyst Agent
+
+Responsible for:
+
+1. Query curation
+2. Schema retrieval
+3. SQL generation
+4. SQL safety validation
+5. Query execution
+6. Result processing
+7. Final answer generation
+
+### ETL Analyst Agent
+
+Responsible for:
+
+1. Understanding ETL requirements
+2. Selecting appropriate tools
+3. Extracting API data
+4. Generating Pandas transformations
+5. Executing transformations
+6. Saving the output
+7. Reporting the result
+
+---
+
+# 🧩 Data Models
+
+The project uses Pydantic schemas to maintain structured agent state.
+
+### RouterSchema
+
 ```python
 class RouterSchema(BaseModel):
-    answer: Literal["sql", "etl"]     # Query classification
-    comments: str                     # Reasoning for classification
+    answer: Literal["sql", "etl"]
+    comments: str
 ```
 
-### DataAgentSchema (Main Agent State)
+### DataAgentSchema
+
 ```python
 class DataAgentSchema(BaseModel):
-    messages: List                    # All conversation messages
-    route_response: str               # Router decision (sql/etl)
+    messages: List
+    route_response: str
 ```
 
----
-
-## 📚 Examples
-
-### Example 1: Database Query
-
-**User Query:**
-```
-"Show me the average rating for each vehicle type"
-```
-
-**Processing:**
-1. Router classifies as SQL query
-2. SQL Agent fetches schema
-3. Generates: `SELECT vehicle_type, AVG(rating) FROM rides GROUP BY vehicle_type LIMIT 10`
-4. Validates safety ✓
-5. Executes and returns results
-
----
-
-### Example 2: Data Extraction
-
-**User Query:**
-```
-"Extract the data from 'https://pokeapi.co/api/v2/pokemon' and save it as CSV"
-```
-
-**Processing:**
-1. Router classifies as ETL operation
-2. ETL Agent selects extract_load_tool
-3. Makes API request to endpoint
-4. Normalizes JSON response
-5. Saves to `data/extract/extracted_data.csv`
-
----
-
-### Example 3: Data Transformation
-
-**User Query:**
-```
-"Transform rides.csv to filter only rides with rating > 4.0 and save as JSON"
-```
-
-**Processing:**
-1. Router classifies as ETL operation
-2. ETL Agent analyzes requirement
-3. Generates Pandas code to filter and transform
-4. Executes code safely
-5. Saves result to `data/transform/` in JSON format
-
----
-
-## 🔐 Security Features
-
-✅ **SQL Safety Validation**
-- Query inspection before execution
-- Blocks destructive operations
-- Database structure protection
-
-✅ **Safe Code Execution**
-- Sandboxed Python code execution
-- Input validation
-- Error handling and reporting
-
-✅ **Environment Security**
-- Credentials stored in `.env` (not in code)
-- Sensitive data protection
-- Proper exception handling
-
----
-
-## 🛠️ Development
-
-### Adding a New Agent
-
-1. Create new agent file in `agents/` directory
-2. Define state schema in `Models/schema.py`
-3. Implement agent nodes using LangGraph
-4. Add routing logic in `data_agent.py`
-5. Update documentation
-
-### Extending ETL Tools
-
-Add new tools in `utils/etl_tools.py`:
+### ETLAgentSchema
 
 ```python
-@tool
-def new_tool(param: str) -> str:
-    """Tool description"""
-    # Implementation
-    pass
+class ETLAgentSchema(BaseModel):
+    messages: List
 ```
 
-### Customizing LLM Selection
+---
 
-Modify `utils/llm_pick.py` to adjust:
-- Model selection criteria
-- Temperature and parameters
-- Token limits
-- Response format
+# 🔐 Security
+
+The project follows several security practices:
+
+### Environment Security
+
+API keys and database credentials are stored in:
+
+```text
+.env
+```
+
+and are excluded from Git using:
+
+```text
+.gitignore
+```
+
+### SQL Validation
+
+The SQL workflow validates generated queries before execution.
+
+Destructive operations such as:
+
+```text
+DELETE
+DROP
+ALTER
+UPDATE
+INSERT
+TRUNCATE
+```
+
+are restricted by the SQL safety workflow.
+
+### Structured Outputs
+
+Pydantic models are used to validate structured agent responses.
 
 ---
 
-## 📝 Environment Variables Reference
+# 📈 Example Workflow
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `ANTHROPIC_API_KEY` | Claude API key | `sk-ant-...` |
-| `OPENAI_API_KEY` | OpenAI API key | `sk-...` |
-| `host` | PostgreSQL host | `localhost` |
-| `port` | PostgreSQL port | `5432` |
-| `user` | PostgreSQL user | `postgres` |
-| `password` | PostgreSQL password | `your_password` |
-| `database` | Database name | `data_agent_db` |
+### SQL Request
+
+```text
+User:
+"Show me the average rating for each vehicle type."
+
+        ↓
+
+Data Agent
+
+        ↓
+
+SQL Analyst Agent
+
+        ↓
+
+Database Schema
+
+        ↓
+
+SQL Generation
+
+        ↓
+
+SQL Safety Validation
+
+        ↓
+
+PostgreSQL
+
+        ↓
+
+Result
+
+        ↓
+
+Natural Language Answer
+```
+
+### ETL Request
+
+```text
+User:
+"Extract Pokemon data from the PokeAPI and save it as CSV."
+
+        ↓
+
+Data Agent
+
+        ↓
+
+ETL Analyst Agent
+
+        ↓
+
+Tool Selection
+
+        ↓
+
+API Request
+
+        ↓
+
+Data Processing
+
+        ↓
+
+CSV Output
+```
 
 ---
 
-## 🚨 Troubleshooting
+# 🎯 Project Goals
 
-### Issue: "Database connection failed"
-**Solution:** Verify PostgreSQL is running and credentials in `.env` are correct
+This project demonstrates practical implementation of:
 
-### Issue: "API key not found"
-**Solution:** Ensure API keys are set in `.env` file
-
-### Issue: "SQL query unsafe"
-**Solution:** The query contains destructive operations. Reformulate as a SELECT query only
-
-### Issue: "Module not found"
-**Solution:** Activate virtual environment and reinstall dependencies
-
----
-
-## 📈 Performance Considerations
-
-- **Query Complexity**: Low complexity queries use faster LLMs
-- **Database Optimization**: Add indexes for frequently queried columns
-- **API Rate Limiting**: Respect rate limits of external APIs
-- **Memory Usage**: Large dataset transformations may require optimization
+* Agentic AI
+* Multi-agent systems
+* Natural-language database interaction
+* Text-to-SQL
+* SQL safety validation
+* ETL automation
+* Tool calling
+* LangGraph workflows
+* PostgreSQL integration
+* LLM-powered data analysis
+* API data extraction
+* Pandas-based data transformation
 
 ---
 
-## 🤝 Contributing
+# 🧪 Testing the ETL Agent
 
-Contributions are welcome! Please ensure:
+A working test request:
 
-1. Code follows existing style
-2. All agents have proper documentation
-3. New features include state schemas
-4. Security implications are considered
-5. Tests are added for new functionality
+```text
+I want to extract the data from the API endpoint
+'https://pokeapi.co/api/v2/pokemon'
+and save it to data/extract/csv.
+```
 
----
+Expected output:
 
-## 📄 License
-
-This project is part of an AI engineering demonstration.
-
----
-
-## 👨‍💻 Author & Support
-
-For questions, issues, or suggestions, please refer to the project documentation or reach out to the development team.
+```text
+Data successfully extracted and saved to:
+data/extract/csv/extracted_data.csv
+```
 
 ---
 
-## 🎓 Learning Resources
+# 🔮 Future Improvements
 
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
-- [LangChain Documentation](https://python.langchain.com/)
-- [Claude API Reference](https://docs.anthropic.com/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+Possible future enhancements include:
+
+* Web-based chat interface
+* Streaming agent responses
+* Authentication and user management
+* More database connectors
+* Additional ETL tools
+* Better SQL query optimization
+* Agent memory
+* Query history
+* Data visualization
+* Automated data quality checks
+* More advanced SQL safety policies
+* Docker deployment
+* Cloud deployment
 
 ---
 
-**Last Updated:** August 2026
-**Version:** 0.1.0
+# 📚 Learning Resources
+
+* [LangGraph](https://langchain-ai.github.io/langgraph/)
+* [LangChain](https://python.langchain.com/)
+* [PostgreSQL](https://www.postgresql.org/docs/)
+* [Groq](https://console.groq.com/)
+
+---
+
+# 👨‍💻 Author
+
+**Dattaram Muknak**
+
+AI & Data Science Engineer | AI/ML | Backend | Data Engineering
+
+GitHub:
+https://github.com/DattaramMuknak
+
+---
+
+# 📄 License
+
+This project is created as an AI engineering and learning project.
+
+---
+
+## ⭐ If you find this project useful
+
+Feel free to explore the code, raise issues, and contribute improvements.
+
+**Built with Python, LangGraph, LangChain, Groq, PostgreSQL, and Pandas.**
