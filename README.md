@@ -4,6 +4,8 @@ An intelligent **AI-powered SQL and ETL data agent** built with **LangGraph, Gro
 
 The system accepts natural-language instructions and intelligently routes them to specialized agents. It can generate and execute safe SQL queries against PostgreSQL databases or perform ETL operations such as extracting data from APIs, transforming datasets, and saving results in multiple formats.
 
+<img width="940" height="302" alt="image" src="https://github.com/user-attachments/assets/a15f6e21-eb8c-4caa-973e-a42fac82fada" />
+
 ---
 
 ## 🚀 Features
